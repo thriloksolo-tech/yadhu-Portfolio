@@ -1,0 +1,58 @@
+name: Publish portfolio to GitHub Pages
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "github-pages"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Reconstruct portfolio site
+        shell: bash
+        run: |
+          mkdir -p public
+          cat \
+            .site/chunk-00.b64 \
+            .site/chunk-01.b64 \
+            .site/chunk-02.b64 \
+            .site/chunk-03.b64 \
+            .site/chunk-04.b64 \
+            .site/chunk-05.b64 \
+            .site/fix06-00.b64 \
+            .site/fix06-01.b64 \
+            .site/fix06-02.b64 \
+            .site/chunk-07.b64 \
+            .site/chunk-08.b64 \
+            | base64 --decode | gzip --decompress > public/index.html
+          touch public/.nojekyll
+          test -s public/index.html
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
