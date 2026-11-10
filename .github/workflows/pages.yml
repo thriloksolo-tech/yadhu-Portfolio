@@ -54,7 +54,7 @@ jobs:
           </style>'''
           if '</head>' not in html:
               raise SystemExit('Could not find the document head; refusing to publish an unpatched page.')
-          html = html.replace('</head>', fix + '\\n</head>', 1)
+          html = html.replace('</head>', fix + '\n</head>', 1)
           page.write_text(html, encoding='utf-8')
           PY
           touch public/.nojekyll
