@@ -38,6 +38,25 @@ jobs:
             .site/chunk-07.b64 \
             .site/chunk-08.b64 \
             | base64 --decode | gzip --decompress > public/index.html
+          python - <<'PY'
+          from pathlib import Path
+          page = Path('public/index.html')
+          html = page.read_text(encoding='utf-8')
+          fix = '''<style>
+          /* Keep animated accent gradients clipped to the letters, not painted as a block. */
+          .gradient-text {
+            -webkit-background-clip: text !important;
+            background-clip: text !important;
+            color: transparent !important;
+            -webkit-text-fill-color: transparent !important;
+            display: inline;
+          }
+          </style>'''
+          if '</head>' not in html:
+              raise SystemExit('Could not find the document head; refusing to publish an unpatched page.')
+          html = html.replace('</head>', fix + '\\n</head>', 1)
+          page.write_text(html, encoding='utf-8')
+          PY
           touch public/.nojekyll
           test -s public/index.html
 
